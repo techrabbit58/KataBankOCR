@@ -115,7 +115,8 @@ class OcrDigitsTest {
             "345882865, true",
             "123456789, true",
             "987654321, false",
-            "111111111, false"
+            "111111111, false",
+            "198473192, true",
     })
     void checksumValidation(String candidate, boolean expectation) {
         assertEquals(expectation, OcrDigits.isAccountNumberValid(candidate));
