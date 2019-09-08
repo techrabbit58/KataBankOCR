@@ -53,6 +53,9 @@ public class OcrDigits {
             }
             symbolPosition += 3;
         }
+        if (symbolPosition >= symbols[0].length()) {
+            return "?";
+        }
         return Character.toString(symbols[3].charAt(symbolPosition));
     }
 
@@ -73,7 +76,11 @@ public class OcrDigits {
         int checksum = 0;
         for (int n = 9; n > 0; n -= 1) {
             int index = 9 - n;
-            checksum += Integer.parseInt(candidate.substring(index, index + 1)) * n;
+            String ch = candidate.substring(index, index + 1);
+            if (ch.equals("?")) {
+                return false;
+            }
+            checksum += Integer.parseInt(ch) * n;
         }
         return (checksum % 11) == 0;
     }

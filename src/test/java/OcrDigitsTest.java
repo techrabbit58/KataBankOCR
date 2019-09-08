@@ -24,8 +24,10 @@ class OcrDigitsTest {
 
     private static final String US1_INPUT_FILENAME = "use_case_1_in.txt";
     private static final String EXPECTED_US1_RESULTS_FILENAME = "use_case_1_out.txt";
-    private static BufferedReader fileUnderTest;
+    private static final String US3_INPUT_FILENAME = "use_case_3_in.txt";
+    private static final String EXPECTED_US3_RESULTS_FILENAME = "use_case_3_out.txt";
     private static final List<String> expectedUs1Results = new ArrayList<>();
+    private static final List<String> expectedUs3Results = new ArrayList<>();
 
     static BufferedReader open(String fn) throws FileNotFoundException {
         return new BufferedReader(new FileReader(ClassLoader.getSystemResource(fn).getFile()));
@@ -36,11 +38,18 @@ class OcrDigitsTest {
      */
     @BeforeAll
     static void initAll() throws IOException {
-        BufferedReader expectedNumbers = open(EXPECTED_US1_RESULTS_FILENAME);
+        loadExpectedResults(EXPECTED_US1_RESULTS_FILENAME, expectedUs1Results);
+        loadExpectedResults(EXPECTED_US3_RESULTS_FILENAME, expectedUs3Results);
+    }
+
+    private static void loadExpectedResults(
+            String expectedResultsFilename, List<String> expectedResults) throws IOException {
+        BufferedReader expectedNumbers = open(expectedResultsFilename);
         String s;
         while ((s = expectedNumbers.readLine()) != null) {
-            expectedUs1Results.add(s);
+            expectedResults.add(s);
         }
+        System.out.println(expectedResults);
         expectedNumbers.close();
     }
 
@@ -55,7 +64,7 @@ class OcrDigitsTest {
      */
     @Test
     void inputFileHasValidFormat() throws IOException {
-        fileUnderTest = open(US1_INPUT_FILENAME);
+        BufferedReader fileUnderTest = open(US1_INPUT_FILENAME);
         Set<Character> allowedCharacters = new HashSet<>(Arrays.asList(' ', '_', '|'));
         int linesInFile = 0;
         String s;
@@ -82,7 +91,7 @@ class OcrDigitsTest {
      */
     @Test
     void allScansInFileAreRecognizableNumbers() throws IOException {
-        fileUnderTest = open(US1_INPUT_FILENAME);
+        BufferedReader fileUnderTest = open(US1_INPUT_FILENAME);
         String s;
         String[] scanLine = new String[3];
         int scanLineNumber = 0;
@@ -109,6 +118,9 @@ class OcrDigitsTest {
      * decoded scan results must be checked.
      * The checksum for a given decoded scan result shall be checked by the isAccountNumberValid function
      * of the OcrDigits class.
+     *
+     * @param candidate ... to be used as input to the test
+     * @param expectation ... about the outcome of the test
      */
     @ParameterizedTest
     @CsvSource({
@@ -117,9 +129,45 @@ class OcrDigitsTest {
             "987654321, false",
             "111111111, false",
             "198473192, true",
+            "000000051, true",
+            "000000057, false",
     })
     void checksumValidation(String candidate, boolean expectation) {
         assertEquals(expectation, OcrDigits.isAccountNumberValid(candidate));
+    }
+
+    /**
+     * User Story 3
+     *
+     * Test if we can recognize illegal (ILL) or erroneous (ERR) account numbers.
+     * ILL numbers ar those that contain '?' characters where digits shall be.
+     * ERR are well formed numbers, but have not passed the checksum test.
+     * The "decode()" routine shall reliably recognize ILL and ERR, and shall mark such
+     * numbers with the appropriate tag.
+     */
+    @Test
+    void recognizeIllegalOrErrorCorrectly() throws IOException {
+        BufferedReader fileUnderTest = open(US3_INPUT_FILENAME);
+        String s;
+        String[] scanLine = new String[3];
+        int scanLineNumber = 0;
+        int relativeLineNumber = 0;
+        String actualResult;
+        while ((s = fileUnderTest.readLine()) != null) {
+            if (relativeLineNumber < 3) {
+                scanLine[relativeLineNumber] = s;
+            } else {
+                assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
+                actualResult = OcrDigits.decode(scanLine);
+                if (!OcrDigits.isAccountNumberValid(actualResult)) {
+                    actualResult += actualResult.contains("?") ? " ILL" : " ERR";
+                }
+                assertEquals(expectedUs3Results.get(scanLineNumber), actualResult);
+                scanLineNumber += 1;
+            }
+            relativeLineNumber = (relativeLineNumber + 1) % 4;
+        }
+        fileUnderTest.close();
     }
 
 }
