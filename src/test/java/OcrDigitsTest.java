@@ -24,10 +24,16 @@ class OcrDigitsTest {
 
     private static final String US1_INPUT_FILENAME = "use_case_1_in.txt";
     private static final String EXPECTED_US1_RESULTS_FILENAME = "use_case_1_out.txt";
+
     private static final String US3_INPUT_FILENAME = "use_case_3_in.txt";
     private static final String EXPECTED_US3_RESULTS_FILENAME = "use_case_3_out.txt";
+
+    private static final String US4_INPUT_FILENAME = "use_case_4_in.txt";
+    private static final String EXPECTED_US4_RESULTS_FILENAME = "use_case_4_out.txt";
+
     private static final List<String> expectedUs1Results = new ArrayList<>();
     private static final List<String> expectedUs3Results = new ArrayList<>();
+    private static final List<String> expectedUs4Results = new ArrayList<>();
 
     static BufferedReader open(String fn) throws FileNotFoundException {
         return new BufferedReader(new FileReader(ClassLoader.getSystemResource(fn).getFile()));
@@ -40,6 +46,7 @@ class OcrDigitsTest {
     static void initAll() throws IOException {
         loadExpectedResults(EXPECTED_US1_RESULTS_FILENAME, expectedUs1Results);
         loadExpectedResults(EXPECTED_US3_RESULTS_FILENAME, expectedUs3Results);
+        loadExpectedResults(EXPECTED_US4_RESULTS_FILENAME, expectedUs4Results);
     }
 
     private static void loadExpectedResults(
@@ -167,6 +174,19 @@ class OcrDigitsTest {
             relativeLineNumber = (relativeLineNumber + 1) % 4;
         }
         fileUnderTest.close();
+    }
+
+    /**
+     * User Story 4
+     *
+     * (Not done. Currently a dummy.)
+     */
+    @Test
+    void dealCorrectlyWithErrorCorrectionAndAmbiguity() throws IOException {
+        BufferedReader fileUnderTest = open(US4_INPUT_FILENAME);
+        fileUnderTest.lines().forEach(System.out::println);
+        fileUnderTest.close();
+        System.out.println(expectedUs4Results);
     }
 
 }
