@@ -24,15 +24,14 @@ class OcrDigitsTest {
 
     private static final String US1_INPUT_FILENAME = "use_case_1_in.txt";
     private static final String EXPECTED_US1_RESULTS_FILENAME = "use_case_1_out.txt";
+    private static final List<String> expectedUs1Results = new ArrayList<>();
 
     private static final String US3_INPUT_FILENAME = "use_case_3_in.txt";
     private static final String EXPECTED_US3_RESULTS_FILENAME = "use_case_3_out.txt";
+    private static final List<String> expectedUs3Results = new ArrayList<>();
 
     private static final String US4_INPUT_FILENAME = "use_case_4_in.txt";
     private static final String EXPECTED_US4_RESULTS_FILENAME = "use_case_4_out.txt";
-
-    private static final List<String> expectedUs1Results = new ArrayList<>();
-    private static final List<String> expectedUs3Results = new ArrayList<>();
     private static final List<String> expectedUs4Results = new ArrayList<>();
 
     static BufferedReader open(String fn) throws FileNotFoundException {
@@ -61,7 +60,7 @@ class OcrDigitsTest {
 
     /**
      * User Story 1
-     *
+     * <p>
      * An input file is valid, if ...
      * - all its lines are 27 characters long (if ignoring the line break symbols)
      * - all lines consist only of blanks, underscores and pipe characters (" _|")
@@ -88,7 +87,7 @@ class OcrDigitsTest {
 
     /**
      * User Story 1
-     *
+     * <p>
      * A scan consists of four lines, with the line separator already stripped.
      * A scan is valid, if it has three lines with 27 characters each, that can be
      * decoded to 9 consecutive digits, and if the fourth line appears to be 27
@@ -119,13 +118,13 @@ class OcrDigitsTest {
 
     /**
      * User Story 2
-     *
+     * <p>
      * To validate that the numbers you read are in fact valid account numbers, the checksums of the
      * decoded scan results must be checked.
      * The checksum for a given decoded scan result shall be checked by the isAccountNumberValid function
      * of the OcrDigits class.
      *
-     * @param candidate ... to be used as input to the test
+     * @param candidate   ... to be used as input to the test
      * @param expectation ... about the outcome of the test
      */
     @ParameterizedTest
@@ -144,7 +143,7 @@ class OcrDigitsTest {
 
     /**
      * User Story 3
-     *
+     * <p>
      * Test if we can recognize illegal (ILL) or erroneous (ERR) account numbers.
      * ILL numbers ar those that contain '?' characters where digits shall be.
      * ERR are well formed numbers, but have not passed the checksum test.
@@ -178,7 +177,7 @@ class OcrDigitsTest {
 
     /**
      * User Story 4
-     *
+     * <p>
      * (Not done. Currently a dummy.)
      */
     @Test
