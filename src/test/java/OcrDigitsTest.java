@@ -49,7 +49,6 @@ class OcrDigitsTest {
         while ((s = expectedNumbers.readLine()) != null) {
             expectedResults.add(s);
         }
-        System.out.println(expectedResults);
         expectedNumbers.close();
     }
 
