@@ -1,6 +1,6 @@
 package de.pruefbit.kata;
 
-public class OcrDigits {
+public class OcrDecode {
 
     private static final String[] symbols = {
             " _     _  _     _  _  _  _  _ ",

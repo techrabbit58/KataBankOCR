@@ -1,4 +1,4 @@
-import de.pruefbit.kata.OcrDigits;
+import de.pruefbit.kata.OcrDecode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -107,7 +107,7 @@ class OcrDigitsTest {
                 scanLine[relativeLineNumber] = s;
             } else {
                 assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
-                actualResult = OcrDigits.decode(scanLine);
+                actualResult = OcrDecode.decode(scanLine);
                 assertEquals(expectedUs1Results.get(scanLineNumber), actualResult);
                 scanLineNumber += 1;
             }
@@ -122,7 +122,7 @@ class OcrDigitsTest {
      * To validate that the numbers you read are in fact valid account numbers, the checksums of the
      * decoded scan results must be checked.
      * The checksum for a given decoded scan result shall be checked by the isAccountNumberValid function
-     * of the OcrDigits class.
+     * of the OcrDecode class.
      *
      * @param candidate   ... to be used as input to the test
      * @param expectation ... about the outcome of the test
@@ -138,7 +138,7 @@ class OcrDigitsTest {
             "000000057, false",
     })
     void checksumValidation(String candidate, boolean expectation) {
-        assertEquals(expectation, OcrDigits.isAccountNumberValid(candidate));
+        assertEquals(expectation, OcrDecode.isAccountNumberValid(candidate));
     }
 
     /**
@@ -163,8 +163,8 @@ class OcrDigitsTest {
                 scanLine[relativeLineNumber] = s;
             } else {
                 assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
-                actualResult = OcrDigits.decode(scanLine);
-                if (!OcrDigits.isAccountNumberValid(actualResult)) {
+                actualResult = OcrDecode.decode(scanLine);
+                if (!OcrDecode.isAccountNumberValid(actualResult)) {
                     actualResult += actualResult.contains("?") ? " ILL" : " ERR";
                 }
                 assertEquals(expectedUs3Results.get(scanLineNumber), actualResult);
