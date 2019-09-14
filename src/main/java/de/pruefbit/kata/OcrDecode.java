@@ -222,7 +222,7 @@ public class OcrDecode {
 
     /**
      * In case, there is just one single digit not recognized from the raw scan result, a list of alternative digits
-     * shall be searched from the illegalSymbols table, so that a recovery can be tried.
+     * shall be searched from the illegalSymbols table, so that a recovery can be attempted.
      *
      * @param scanLine               the scan line with the illegal symbol
      * @param unrecognizedDigitIndex where the illegal symbol is, in the scan line
@@ -233,6 +233,15 @@ public class OcrDecode {
         return possibleDigits.get(decodeOneDigit(oneSymbol, illegalSymbols));
     }
 
+    /**
+     * In case we already have a list of possible digits for unreadable scan symbols, we can check one after the other
+     * if it gives a good or bad checksum. We collect alternatives that give good checksums.
+     *
+     * @param candidate    the digit string we want to recover one digit
+     * @param position     the position in candidate, where we found the recoverable digit
+     * @param alternatives the possible alternatives we can try to recover with
+     * @return the list of recovered possible candidate digit strings
+     */
     public static List<String> recoverUnreadable(String candidate, int position, char[] alternatives) {
         List<String> results = new ArrayList<>();
         for (char ch : alternatives) {
