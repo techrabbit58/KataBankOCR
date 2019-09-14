@@ -165,7 +165,7 @@ class OcrDigitsTest {
                 assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
                 actualResult = OcrDecode.decode(scanLine);
                 if (!OcrDecode.isAccountNumberValid(actualResult)) {
-                    actualResult += actualResult.contains("?") ? " ILL" : " ERR";
+                    actualResult += OcrDecode.numberOfUnrecognizedDigits(actualResult) > 0 ? " ILL" : " ERR";
                 }
                 assertEquals(expectedUs3Results.get(scanLineNumber), actualResult);
                 scanLineNumber += 1;
@@ -178,14 +178,57 @@ class OcrDigitsTest {
     /**
      * User Story 4
      * <p>
-     * (Not done. Currently a dummy.)
+     * If we get a checksum mismatch, we can try to recover from the ERR or ILL situation,
+     * by adding or removing at most one single "_" or "|" from the actual raw number.
+     * In case of an ERR (checksum error), one digit may need to change slightly.
+     * In case of an ILL with only a single illegal digit, we can try to change that
+     * digit slightly (by adding or removing one "_" or "|").
+     * In case there are more than one chances to repair, that give valid checksum results,
+     * we shall not guess but mark the decode result we have as AMB (for "ambiguity").
      */
     @Test
     void dealCorrectlyWithErrorCorrectionAndAmbiguity() throws IOException {
         BufferedReader fileUnderTest = open(US4_INPUT_FILENAME);
-        fileUnderTest.lines().forEach(System.out::println);
+        String s;
+        String[] scanLine = new String[3];
+        int scanLineNumber = 0;
+        int relativeLineNumber = 0;
+        String actualResult;
+        while ((s = fileUnderTest.readLine()) != null) {
+            if (relativeLineNumber < 3) {
+                scanLine[relativeLineNumber] = s;
+            } else {
+                assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
+                actualResult = OcrDecode.decode(scanLine);
+                if (!OcrDecode.isAccountNumberValid(actualResult)) {
+                    List<Integer> unrecognizedDigitsIndex = OcrDecode.unrecognizedDigitsIndex(actualResult);
+                    if (unrecognizedDigitsIndex.size() == 0) {
+                        List<String> recoveryCandidates = OcrDecode.recoverError(actualResult);
+                        actualResult = checkAmbiguity(recoveryCandidates, actualResult);
+                    } else if (unrecognizedDigitsIndex.size() == 1) {
+                        long unrecognizedDigitIndex = unrecognizedDigitsIndex.get(0);
+                        char[] alternatives = OcrDecode.findAlternatives(scanLine, (int) unrecognizedDigitIndex);
+                        List<String> recoveryCandidates = OcrDecode.recoverUnreadable(
+                                actualResult, (int) unrecognizedDigitIndex, alternatives);
+                        actualResult = checkAmbiguity(recoveryCandidates, actualResult);
+                    } else {
+                        actualResult += " ILL";
+                    }
+                }
+                assertEquals(expectedUs4Results.get(scanLineNumber), actualResult);
+                scanLineNumber += 1;
+            }
+            relativeLineNumber = (relativeLineNumber + 1) % 4;
+        }
         fileUnderTest.close();
-        System.out.println(expectedUs4Results);
     }
 
+    private String checkAmbiguity(List<String> candidates, String actualResult) {
+        if (candidates.size() > 1) {
+            actualResult += " AMB";
+        } else {
+            actualResult = candidates.get(0);
+        }
+        return actualResult;
+    }
 }
