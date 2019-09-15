@@ -7,14 +7,13 @@ import java.util.Map;
 
 /**
  * This is just another Java implementation of the Bank OCR Kata.
- * You can find the kata at the Coding Dojo of Emmanuel Gaillot.
- * <p>
+ * You can find the kata at the Coding Dojo of Emmanuel Gaillot.<br><br>
  * <ul>
  * <li><a href="http://codingdojo.org/kata/BankOCR/">Coding Dojo/Kata/BankOCR</a></li>
  * <li><a href="http://codingdojo.org/people/EmmanuelGaillot">Emmanuel Gaillot</a></li>
  * </ul>
  * <p>
- * I implemented all four user stories.
+ * I did implement all four user stories.
  *
  * @author Karl-Dieter Zimmer-Bentin, https://github.com/techrabbit58
  * @version 1.0
