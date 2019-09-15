@@ -13,8 +13,8 @@ public class OcrDecode {
             "|_|  ||_  _|  | _||_|  ||_| _|",
             "000111222333444555666777888999"
     };
-
     private static final Map<Character, char[]> alternatives = new HashMap<>();
+
     private static final String[] illegalSymbols = {
             "    _  _  _  _  _           _  _  _  _     _  _  _                 _  _  _     _  _  _  _  _     _  _  _     _  _ ",
             "| ||  | || || |  |  |    _| _   | _| _| _|  | _| _  _|| ||_ |_||_ |  |_ |_ |_  _ |_ |_   |   |_| _||_||_||_||_||_|",
@@ -270,19 +270,19 @@ public class OcrDecode {
         List<Integer> unrecognizedDigitsIndex = unrecognizedDigitsIndex(actualResult);
         if (unrecognizedDigitsIndex.size() == 0) {
             List<String> recoveryCandidates = recoverError(actualResult);
-            actualResult = checkAmbiguity(recoveryCandidates, actualResult);
+            actualResult = markAmbOrErr(recoveryCandidates, actualResult);
         } else if (unrecognizedDigitsIndex.size() == 1) {
-            long unrecognizedDigitIndex = unrecognizedDigitsIndex.get(0);
-            char[] alternatives = OcrDecode.findAlternatives(scanLine, (int) unrecognizedDigitIndex);
-            List<String> recoveryCandidates = recoverUnreadable(actualResult, (int) unrecognizedDigitIndex, alternatives);
-            actualResult = checkAmbiguity(recoveryCandidates, actualResult);
+            int unrecognizedDigitIndex = unrecognizedDigitsIndex.get(0);
+            char[] alternatives = findAlternatives(scanLine, unrecognizedDigitIndex);
+            List<String> recoveryCandidates = recoverUnreadable(actualResult, unrecognizedDigitIndex, alternatives);
+            actualResult = markAmbOrErr(recoveryCandidates, actualResult);
         } else {
             actualResult += " ILL";
         }
         return actualResult;
     }
 
-    private static String checkAmbiguity(List<String> candidates, String actualResult) {
+    private static String markAmbOrErr(List<String> candidates, String actualResult) {
         if (candidates.size() == 0) {
             actualResult += " ERR";
         } else if (candidates.size() > 1) {
