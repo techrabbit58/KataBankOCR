@@ -169,12 +169,16 @@ public class OcrDecode {
      * The function shall count the illegal digits "?" in the decoded scan result, and shall
      * return the "?" count. A 0 result than indicates "all digits valid" (in case of wrong
      * this means "ERR"), and a number > 0 means "ILL" for illegal characters.
+     * <p>
+     * This function marks a given candidate decoded digits string as ERR or ILL, depending on checksum result
+     * and/or illegal (unreadable) characters in decoded digits string.
      *
-     * @param candidate the result from the decode operation (a string of digits)
-     * @return the number of '?' in the given string of digits
+     * @param candidate is the candidate digits string
+     * @return the candidate, with ERR or ILL appended, as appropriate
      */
-    public static long numberOfUnrecognizedDigits(String candidate) {
-        return candidate.chars().filter(ch -> ch == '?').count();
+    public static String markErrOrIll(String candidate) {
+        candidate += candidate.chars().filter(ch -> ch == '?').count() > 0 ? " ILL" : " ERR";
+        return candidate;
     }
 
     /**
@@ -185,7 +189,7 @@ public class OcrDecode {
      * @return a list with the character positions of the "?" characters, with count
      * beginning at 0
      */
-    public static List<Integer> unrecognizedDigitsIndex(String candidate) {
+    private static List<Integer> unrecognizedDigitsIndex(String candidate) {
         List<Integer> index = new ArrayList<>();
         for (int i = 0; i < candidate.length(); i += 1) {
             if (candidate.charAt(i) == '?') {
@@ -203,7 +207,7 @@ public class OcrDecode {
      * @param candidate is the erroneous digit string to recover
      * @return the list of possible alternatives
      */
-    public static List<String> recoverError(String candidate) {
+    private static List<String> recoverError(String candidate) {
         List<String> results = new ArrayList<>();
         int position = 0;
         int length = candidate.length();
@@ -228,7 +232,7 @@ public class OcrDecode {
      * @param unrecognizedDigitIndex where the illegal symbol is, in the scan line
      * @return the alternative digit string
      */
-    public static char[] findAlternatives(String[] scanLine, int unrecognizedDigitIndex) {
+    private static char[] findAlternatives(String[] scanLine, int unrecognizedDigitIndex) {
         String[] oneSymbol = extractOneSymbol(scanLine, unrecognizedDigitIndex * 3);
         return possibleDigits.get(decodeOneDigit(oneSymbol, illegalSymbols));
     }
@@ -242,7 +246,7 @@ public class OcrDecode {
      * @param alternatives the possible alternatives we can try to recover with
      * @return the list of recovered possible candidate digit strings
      */
-    public static List<String> recoverUnreadable(String candidate, int position, char[] alternatives) {
+    private static List<String> recoverUnreadable(String candidate, int position, char[] alternatives) {
         List<String> results = new ArrayList<>();
         for (char ch : alternatives) {
             String checkable = candidate.substring(0, position) + ch + candidate.substring(position + 1);
@@ -251,5 +255,41 @@ public class OcrDecode {
             }
         }
         return results;
+    }
+
+    /**
+     * This routine brings the functionality of findAlternatives(), recoverError() and recoverUnreadable much closer
+     * together and creates a cohesive ensemble of the functionality.
+     *
+     * @param scanLine     the scan line with bad checksum and/or at least one illegal symbol
+     * @param actualResult the currently known decoded digits, may contain the '?' for unreadable or illegal symbols
+     * @return the new actualResult. May be a recovered digit string, or the unchanged actualResult, but with a
+     * suffix " AMB" or " ILL".
+     */
+    public static String tryRecoverErrOrIll(String[] scanLine, String actualResult) {
+        List<Integer> unrecognizedDigitsIndex = unrecognizedDigitsIndex(actualResult);
+        if (unrecognizedDigitsIndex.size() == 0) {
+            List<String> recoveryCandidates = recoverError(actualResult);
+            actualResult = checkAmbiguity(recoveryCandidates, actualResult);
+        } else if (unrecognizedDigitsIndex.size() == 1) {
+            long unrecognizedDigitIndex = unrecognizedDigitsIndex.get(0);
+            char[] alternatives = OcrDecode.findAlternatives(scanLine, (int) unrecognizedDigitIndex);
+            List<String> recoveryCandidates = recoverUnreadable(actualResult, (int) unrecognizedDigitIndex, alternatives);
+            actualResult = checkAmbiguity(recoveryCandidates, actualResult);
+        } else {
+            actualResult += " ILL";
+        }
+        return actualResult;
+    }
+
+    private static String checkAmbiguity(List<String> candidates, String actualResult) {
+        if (candidates.size() == 0) {
+            actualResult += " ERR";
+        } else if (candidates.size() > 1) {
+            actualResult += " AMB";
+        } else {
+            actualResult = candidates.get(0);
+        }
+        return actualResult;
     }
 }

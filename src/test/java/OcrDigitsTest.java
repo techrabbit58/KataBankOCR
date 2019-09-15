@@ -165,7 +165,7 @@ class OcrDigitsTest {
                 assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
                 actualResult = OcrDecode.decode(scanLine);
                 if (!OcrDecode.isAccountNumberValid(actualResult)) {
-                    actualResult += OcrDecode.numberOfUnrecognizedDigits(actualResult) > 0 ? " ILL" : " ERR";
+                    actualResult = OcrDecode.markErrOrIll(actualResult);
                 }
                 assertEquals(expectedUs3Results.get(scanLineNumber), actualResult);
                 scanLineNumber += 1;
@@ -201,19 +201,7 @@ class OcrDigitsTest {
                 assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
                 actualResult = OcrDecode.decode(scanLine);
                 if (!OcrDecode.isAccountNumberValid(actualResult)) {
-                    List<Integer> unrecognizedDigitsIndex = OcrDecode.unrecognizedDigitsIndex(actualResult);
-                    if (unrecognizedDigitsIndex.size() == 0) {
-                        List<String> recoveryCandidates = OcrDecode.recoverError(actualResult);
-                        actualResult = checkAmbiguity(recoveryCandidates, actualResult);
-                    } else if (unrecognizedDigitsIndex.size() == 1) {
-                        long unrecognizedDigitIndex = unrecognizedDigitsIndex.get(0);
-                        char[] alternatives = OcrDecode.findAlternatives(scanLine, (int) unrecognizedDigitIndex);
-                        List<String> recoveryCandidates = OcrDecode.recoverUnreadable(
-                                actualResult, (int) unrecognizedDigitIndex, alternatives);
-                        actualResult = checkAmbiguity(recoveryCandidates, actualResult);
-                    } else {
-                        actualResult += " ILL";
-                    }
+                    actualResult = OcrDecode.tryRecoverErrOrIll(scanLine, actualResult);
                 }
                 assertEquals(expectedUs4Results.get(scanLineNumber), actualResult);
                 scanLineNumber += 1;
@@ -221,14 +209,5 @@ class OcrDigitsTest {
             relativeLineNumber = (relativeLineNumber + 1) % 4;
         }
         fileUnderTest.close();
-    }
-
-    private String checkAmbiguity(List<String> candidates, String actualResult) {
-        if (candidates.size() > 1) {
-            actualResult += " AMB";
-        } else {
-            actualResult = candidates.get(0);
-        }
-        return actualResult;
     }
 }
