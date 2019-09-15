@@ -10,5 +10,3 @@ I did implement all four user stories.
 * All the input files used here for testing of user stories 1, 3 and 4 were prepared by another project.
 * I copied all the data from there.
 * Please follow the link for reference: https://github.com/dvrensk/bank_ocr_kata/tree/master/fixtures
-# JavaDoc
-* To read the JavaDoc for the kata class, please look here: https://raw.githubusercontent.com/techrabbit58/KataBankOCR/master/doc/index.html
