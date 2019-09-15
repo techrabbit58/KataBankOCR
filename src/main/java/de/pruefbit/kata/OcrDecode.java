@@ -5,7 +5,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This is just another Java implementation of the Bank OCR Kata.
+ * You can find the kata at the Coding Dojo of Emmanuel Gaillot.
+ * <p>
+ * <ul>
+ * <li><a href="http://codingdojo.org/kata/BankOCR/">Coding Dojo/Kata/BankOCR</a></li>
+ * <li><a href="http://codingdojo.org/people/EmmanuelGaillot">Emmanuel Gaillot</a></li>
+ * </ul>
+ * <p>
+ * I implemented all four user stories.
+ *
+ * @author Karl-Dieter Zimmer-Bentin, https://github.com/techrabbit58
+ * @version 1.0
+ */
 public class OcrDecode {
+
+    /**
+     * You do not need to instantiate this class.
+     * All methods are static. Simply import the module and use its API to build your own
+     * Bank OCR reader/checker/decoder. Please see the unit tests for usage examples.
+     */
+    private OcrDecode() {}
 
     private static final String[] symbols = {
             " _     _  _     _  _  _  _  _ ",
@@ -168,7 +189,7 @@ public class OcrDecode {
      * In both cases, some recovery may be possible.
      * The function shall count the illegal digits "?" in the decoded scan result, and shall
      * return the "?" count. A 0 result than indicates "all digits valid" (in case of wrong
-     * this means "ERR"), and a number > 0 means "ILL" for illegal characters.
+     * this means "ERR"), and a number .gt. 0 means "ILL" for illegal characters.
      * <p>
      * This function marks a given candidate decoded digits string as ERR or ILL, depending on checksum result
      * and/or illegal (unreadable) characters in decoded digits string.
