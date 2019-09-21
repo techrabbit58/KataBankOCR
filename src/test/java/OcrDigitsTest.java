@@ -1,8 +1,8 @@
 import de.pruefbit.kata.OcrDecode;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -12,7 +12,9 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.MethodOrderer.*;
 
+@TestMethodOrder(OrderAnnotation.class)
 class OcrDigitsTest {
 
     /**
@@ -34,10 +36,6 @@ class OcrDigitsTest {
     private static final String EXPECTED_US4_RESULTS_FILENAME = "use_case_4_out.txt";
     private static final List<String> expectedUs4Results = new ArrayList<>();
 
-    static BufferedReader open(String fn) throws FileNotFoundException {
-        return new BufferedReader(new FileReader(ClassLoader.getSystemResource(fn).getFile()));
-    }
-
     /**
      * To set up the test environment, we must first create lists with our expected outcomes.
      */
@@ -58,6 +56,10 @@ class OcrDigitsTest {
         expectedNumbers.close();
     }
 
+    static BufferedReader open(String fn) throws FileNotFoundException {
+        return new BufferedReader(new FileReader(ClassLoader.getSystemResource(fn).getFile()));
+    }
+
     /**
      * User Story 1
      * <p>
@@ -67,9 +69,11 @@ class OcrDigitsTest {
      * - its line count is greater than 0
      * - its line count is a multiple of 4
      */
-    @Test
-    void inputFileHasValidFormat() throws IOException {
-        BufferedReader fileUnderTest = open(US1_INPUT_FILENAME);
+    @Order(0)
+    @ParameterizedTest
+    @ValueSource(strings = { US1_INPUT_FILENAME, US3_INPUT_FILENAME, US3_INPUT_FILENAME })
+    void inputFileHasValidFormat(String filename) throws IOException {
+        BufferedReader fileUnderTest = open(filename);
         Set<Character> allowedCharacters = new HashSet<>(Arrays.asList(' ', '_', '|'));
         int linesInFile = 0;
         String s;
@@ -97,23 +101,30 @@ class OcrDigitsTest {
     @Test
     void allScansInFileAreRecognizableNumbers() throws IOException {
         BufferedReader fileUnderTest = open(US1_INPUT_FILENAME);
-        String s;
-        String[] scanLine = new String[3];
+        String[] scanLine;
         int scanLineNumber = 0;
-        int relativeLineNumber = 0;
-        String actualResult;
-        while ((s = fileUnderTest.readLine()) != null) {
-            if (relativeLineNumber < 3) {
-                scanLine[relativeLineNumber] = s;
-            } else {
-                assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
-                actualResult = OcrDecode.decode(scanLine);
-                assertEquals(expectedUs1Results.get(scanLineNumber), actualResult);
-                scanLineNumber += 1;
-            }
-            relativeLineNumber = (relativeLineNumber + 1) % 4;
+        while ((scanLine = readNextScanLine(fileUnderTest)) != null) {
+            assertEquals(expectedUs1Results.get(scanLineNumber), OcrDecode.decode(scanLine));
+            scanLineNumber += 1;
         }
         fileUnderTest.close();
+    }
+
+    String[] readNextScanLine(BufferedReader fileUnderTest) throws IOException {
+        String[] result = null;
+        String[] scanLine = new String[3];
+        String line;
+        int relativeLineNumber = 0;
+        while ((line = fileUnderTest.readLine()) != null) {
+            if (relativeLineNumber < 3) {
+                scanLine[relativeLineNumber] = line;
+            } else {
+                result = scanLine;
+                break;
+            }
+            relativeLineNumber += 1;
+        }
+        return result;
     }
 
     /**
@@ -127,6 +138,7 @@ class OcrDigitsTest {
      * @param candidate   ... to be used as input to the test
      * @param expectation ... about the outcome of the test
      */
+    @Order(2)
     @ParameterizedTest
     @CsvSource({
             "345882865, true",
@@ -153,24 +165,15 @@ class OcrDigitsTest {
     @Test
     void recognizeIllegalOrErrorCorrectly() throws IOException {
         BufferedReader fileUnderTest = open(US3_INPUT_FILENAME);
-        String s;
-        String[] scanLine = new String[3];
+        String[] scanLine;
         int scanLineNumber = 0;
-        int relativeLineNumber = 0;
-        String actualResult;
-        while ((s = fileUnderTest.readLine()) != null) {
-            if (relativeLineNumber < 3) {
-                scanLine[relativeLineNumber] = s;
-            } else {
-                assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
-                actualResult = OcrDecode.decode(scanLine);
-                if (!OcrDecode.isAccountNumberValid(actualResult)) {
-                    actualResult = OcrDecode.markErrOrIll(actualResult);
-                }
-                assertEquals(expectedUs3Results.get(scanLineNumber), actualResult);
-                scanLineNumber += 1;
+        while ((scanLine = readNextScanLine(fileUnderTest)) != null) {
+            String actualResult = OcrDecode.decode(scanLine);
+            if (!OcrDecode.isAccountNumberValid(actualResult)) {
+                actualResult = OcrDecode.markErrOrIll(actualResult);
             }
-            relativeLineNumber = (relativeLineNumber + 1) % 4;
+            assertEquals(expectedUs3Results.get(scanLineNumber), actualResult);
+            scanLineNumber += 1;
         }
         fileUnderTest.close();
     }
@@ -189,24 +192,15 @@ class OcrDigitsTest {
     @Test
     void dealCorrectlyWithErrorCorrectionAndAmbiguity() throws IOException {
         BufferedReader fileUnderTest = open(US4_INPUT_FILENAME);
-        String s;
-        String[] scanLine = new String[3];
+        String[] scanLine;
         int scanLineNumber = 0;
-        int relativeLineNumber = 0;
-        String actualResult;
-        while ((s = fileUnderTest.readLine()) != null) {
-            if (relativeLineNumber < 3) {
-                scanLine[relativeLineNumber] = s;
-            } else {
-                assertTrue(s.chars().allMatch(c -> c == ' ') && s.chars().count() == 27);
-                actualResult = OcrDecode.decode(scanLine);
-                if (!OcrDecode.isAccountNumberValid(actualResult)) {
-                    actualResult = OcrDecode.tryRecoverErrOrIll(scanLine, actualResult);
-                }
-                assertEquals(expectedUs4Results.get(scanLineNumber), actualResult);
-                scanLineNumber += 1;
+        while ((scanLine = readNextScanLine(fileUnderTest)) != null) {
+            String actualResult = OcrDecode.decode(scanLine);
+            if (!OcrDecode.isAccountNumberValid(actualResult)) {
+                actualResult = OcrDecode.tryRecoverErrOrIll(scanLine, actualResult);
             }
-            relativeLineNumber = (relativeLineNumber + 1) % 4;
+            assertEquals(expectedUs4Results.get(scanLineNumber), actualResult);
+            scanLineNumber += 1;
         }
         fileUnderTest.close();
     }
